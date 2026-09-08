@@ -1,96 +1,79 @@
-import os
-from http.server import BaseHTTPRequestHandler, HTTPServer
-import urllib.parse
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Контакты</title>
+    <!-- Подключение Bootstrap 5 CSS и Иконок -->
+    <link href="https://jsdelivr.net" rel="stylesheet">
+    <link href="https://jsdelivr.net" rel="stylesheet">
+    <style>
+        body { min-height: 100vh; display: flex; flex-direction: column; }
+        .wrapper { flex: 1; display: flex; flex-wrap: nowrap; }
+        .sidebar { width: 280px; min-height: 100vh; }
+    </style>
+</head>
+<body class="bg-light">
 
-# Автоматически определяем путь к корню проекта (на уровень выше, чем папка src)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-HTML_FILE_PATH = os.path.join(BASE_DIR, "contacts.html")
-
-class MyWebServer(BaseHTTPRequestHandler):
-
-    # Обработка GET-запросов
-    def do_GET(self):
-        if self.path in ['/', '/contacts', '/index.html']:
-            self.send_response(200)
-            self.send_header("Content-type", "text/html; charset=utf-8")
-            self.end_headers()
-
-            # Чтение файла с помощью контекстного менеджера по выверенному пути
-            try:
-                with open(HTML_FILE_PATH, "r", encoding="utf-8") as file:
-                    html_content = file.read()
-                self.wfile.write(bytes(html_content, "utf-8"))
-            except FileNotFoundError:
-                self.wfile.write(bytes("<h3>Ошибка: Файл contacts.html не найден!</h3>", "utf-8"))
-
-        # Обработка 404 ошибки
-        else:
-            self.send_response(404)
-            self.send_header("Content-type", "text/html; charset=utf-8")
-            self.end_headers()
-
-            error_html = """
-            <!DOCTYPE html>
-            <html lang="ru">
-            <head>
-                <meta charset="UTF-8">
-                <link href="https://jsdelivr.net" rel="stylesheet">
-                <title>404 - Страница не найдена</title>
-            </head>
-            <body class="d-flex align-items-center justify-content-center vh-100 bg-light">
-                <div class="text-center card p-5 shadow-sm">
-                    <h1 class="display-1 fw-bold text-danger">404</h1>
-                    <p class="fs-3"> <span class="text-danger">Ой!</span> Страница не найдена.</p>
-                    <p class="lead">Запрашиваемый вами адрес не существует.</p>
-                    <a href="/" class="btn btn-primary">Вернуться на Главную</a>
-                </div>
-            </body>
-            </html>
-            """
-            self.wfile.write(bytes(error_html, "utf-8"))
-
-    # Обработка POST-запросов (вывод данных формы в консоль)
-    def do_POST(self):
-        content_length = int(self.headers['Content-Length'])
-        post_data = self.rfile.read(content_length).decode('utf-8')
-        parsed_data = urllib.parse.parse_qs(post_data)
-
-        print("\n=== ПОЛУЧЕНЫ ДАННЫЕ ОТ ПОЛЬЗОВАТЕЛЯ ===")
-        for key, value in parsed_data.items():
-            print(f"{key}: {value if value else ''}")
-        print("========================================\n")
-
-        self.send_response(200)
-        self.send_header("Content-type", "text/html; charset=utf-8")
-        self.end_headers()
-
-        success_html = """
-        <!DOCTYPE html>
-        <html lang="ru">
-        <head>
-            <meta charset="UTF-8">
-            <link href="https://jsdelivr.net" rel="stylesheet">
-            <title>Успешно</title>
-        </head>
-        <body class="d-flex align-items-center justify-content-center vh-100 bg-light">
-            <div class="text-center card p-4 shadow-sm">
-                <h3 class="text-success mb-3">Данные успешно получены сервером!</h3>
-                <p class="text-muted">Проверить вывод можно в консоли PyCharm.</p>
-                <a href="/" class="btn btn-outline-secondary">Назад к форме</a>
+    <!-- ХЕДЕР -->
+    <header class="p-3 text-bg-dark border-bottom border-secondary">
+        <div class="container-fluid d-flex flex-wrap align-items-center justify-content-between">
+            <span class="fs-5 fw-semibold">Панель администратора</span>
+            <div class="text-end">
+                <span class="badge bg-success">Сервер активен</span>
             </div>
-        </body>
-        </html>
-        """
-        self.wfile.write(bytes(success_html, "utf-8"))
+        </div>
+    </header>
 
-def run(server_class=HTTPServer, handler_class=MyWebServer, port=8000):
-    server_address = ('', port)
-    httpd = server_class(server_address, handler_class)
-    print(f"Сервер успешно запущен на http://localhost:{port}")
-    try:
-        httpd.serve_forever()
-    except KeyboardInterrupt:
-        print("\nСервер остановлен.")
+    <!-- ОСНОВНАЯ ЧАСТЬ -->
+    <div class="wrapper">
+        <!-- БОКОВОЕ МЕНЮ -->
+        <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark sidebar">
+            <ul class="nav nav-pills flex-column mb-auto">
+                <li><a href="#" class="nav-link text-white"><i class="bi bi-house-door me-2"></i>Главная</a></li>
+                <li><a href="#" class="nav-link text-white"><i class="bi bi-grid me-2"></i>Категории</a></li>
+                <li><a href="#" class="nav-link text-white"><i class="bi bi-cart3 me-2"></i>Заказы</a></li>
+                <li><a href="#" class="nav-link active" aria-current="page"><i class="bi bi-person-lines-fill me-2"></i>Контакты</a></li>
+            </ul>
+        </div>
 
-if __name__ == '__main__':
-    run()
+        <!-- КОНТЕНТ С ФОРМОЙ -->
+        <main class="flex-grow-1 p-5 overflow-auto bg-white">
+            <div class="container py-5">
+                <h1 class="mb-4">Контакты</h1>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <!-- Форма с нужными атрибутами (Пункт 1) -->
+                        <form method="post" action="/contacts">
+                            <div class="mb-3">
+                                <label class="form-label" for="username">Имя</label>
+                                <input class="form-control" id="username" name="username" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="email">Почта</label>
+                                <input class="form-control" id="email" name="email" type="email" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="message">Сообщение</label>
+                                <textarea class="form-control" id="message" name="message" required></textarea>
+                            </div>
+
+                            <button class="btn btn-primary" type="submit">Отправить</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ФУТЕР -->
+    <footer class="py-3 my-0 border-top text-center text-muted bg-dark">
+        <p class="mb-0 small">© 2026 Веб-приложение.</p>
+    </footer>
+
+    <script src="https://jsdelivr.net"></script>
+</body>
+</html>
