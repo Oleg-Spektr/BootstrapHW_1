@@ -2,6 +2,7 @@ import os
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import urllib.parse
 
+# Вычисление абсолютного пути к корню проекта
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HTML_FILE_PATH = os.path.join(BASE_DIR, "contacts.html")
 
@@ -9,23 +10,20 @@ class MyWebServer(BaseHTTPRequestHandler):
 
     # Обработка GET-запросов
     def do_GET(self):
-        # Если запрашивают корень или контакты — отдаем страницу контактов
-        if self.path in ["/", "/contacts", "/index.html"]:
+        if self.path in ['/', '/contacts', '/index.html']:
             self.send_response(200)
             self.send_header("Content-type", "text/html; charset=utf-8")
             self.end_headers()
 
-            # Чтение файла с помощью контекстного менеджера
+            # Чтение файла по абсолютному пути (Замечание №2 от ревьюера)
             try:
-                with open("contacts.html", "r", encoding="utf-8") as file:
+                with open(HTML_FILE_PATH, "r", encoding="utf-8") as file:
                     html_content = file.read()
                 self.wfile.write(bytes(html_content, "utf-8"))
             except FileNotFoundError:
-                self.wfile.write(
-                    bytes("<h3>Ошибка: Файл contacts.html не найден!</h3>", "utf-8")
-                )
+                self.wfile.write(bytes("<h3>Ошибка: Файл contacts.html не найден!</h3>", "utf-8"))
 
-        # ДОПОЛНИТЕЛЬНЫЙ ФУНКЦИОНАЛ: Красивая страница 404 ошибки
+        # Обработка 404 ошибки
         else:
             self.send_response(404)
             self.send_header("Content-type", "text/html; charset=utf-8")
@@ -36,7 +34,7 @@ class MyWebServer(BaseHTTPRequestHandler):
             <html lang="ru">
             <head>
                 <meta charset="UTF-8">
-                <link href="https://jsdelivr.net" rel="stylesheet">
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
                 <title>404 - Страница не найдена</title>
             </head>
             <body class="d-flex align-items-center justify-content-center vh-100 bg-light">
@@ -53,39 +51,43 @@ class MyWebServer(BaseHTTPRequestHandler):
 
     # Обработка POST-запросов (вывод данных формы в консоль)
     def do_POST(self):
-        content_length = int(self.headers["Content-Length"])
-        post_data = self.rfile.read(content_length).decode("utf-8")
-        parsed_data = urllib.parse.parse_qs(post_data)
+        # Наша форма отправляет данные на /contacts, поэтому обрабатываем оба пути
+        if self.path in ['/', '/contacts']:
+            content_length = int(self.headers["Content-Length"])
+            post_data = self.rfile.read(content_length).decode("utf-8")
+            parsed_data = urllib.parse.parse_qs(post_data)
 
-        print("\n=== ПОЛУЧЕНЫ ДАННЫЕ ОТ ПОЛЬЗОВАТЕЛЯ ===")
-        for key, value in parsed_data.items():
-            # Выводим ключ и очищенное значение из массива
-            print(f"{key}: {value[0] if value else ''}")
-        print("========================================\n")
+            print("\n=== ПОЛУЧЕНЫ ДАННЫЕ ОТ ПОЛЬЗОВАТЕЛЯ ===")
+            for key, value in parsed_data.items():
+                print(f"{key}: {value[0] if value else ''}")
+            print("========================================\n")
 
-        # Ответ пользователю после успешной отправки формы
-        self.send_response(200)
-        self.send_header("Content-type", "text/html; charset=utf-8")
-        self.end_headers()
+            self.send_response(200)
+            self.send_header("Content-type", "text/html; charset=utf-8")
+            self.end_headers()
 
-        success_html = """
-        <!DOCTYPE html>
-        <html lang="ru">
-        <head>
-            <meta charset="UTF-8">
-            <link href="https://jsdelivr.net" rel="stylesheet">
-            <title>Успешно</title>
-        </head>
-        <body class="d-flex align-items-center justify-content-center vh-100 bg-light">
-            <div class="text-center card p-4 shadow-sm">
-                <h3 class="text-success mb-3">Данные успешно получены сервером!</h3>
-                <p class="text-muted">Проверить вывод можно в консоли PyCharm.</p>
-                <a href="/" class="btn btn-outline-secondary">Назад к форме</a>
-            </div>
-        </body>
-        </html>
-        """
-        self.wfile.write(bytes(success_html, "utf-8"))
+            # Исправлено подключение Bootstrap CSS через легитимный CDN
+            success_html = """
+            <!DOCTYPE html>
+            <html lang="ru">
+            <head>
+                <meta charset="UTF-8">
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+                <title>Успешно</title>
+            </head>
+            <body class="d-flex align-items-center justify-content-center vh-100 bg-light">
+                <div class="text-center card p-4 shadow-sm">
+                    <h3 class="text-success mb-3">Данные успешно получены сервером!</h3>
+                    <p class="text-muted">Проверить вывод можно в консоли PyCharm.</p>
+                    <a href="/" class="btn btn-outline-secondary">Назад к форме</a>
+                </div>
+            </body>
+            </html>
+            """
+            self.wfile.write(bytes(success_html, "utf-8"))
+        else:
+            self.send_response(404)
+            self.end_headers()
 
 
 def run(server_class=HTTPServer, handler_class=MyWebServer, port=8000):
